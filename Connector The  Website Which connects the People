@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConnectApp</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.3/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+
+<div id="auth-section" class="min-h-screen flex items-center justify-center">
+    <div id="auth-container" class="p-6 max-w-md mx-auto bg-white rounded-xl shadow-md space-y-4">
+        <h2 id="auth-title" class="text-center text-2xl font-bold">Sign Up</h2>
+        <div id="sign-up-form" class="space-y-4">
+            <input id="username" type="text" placeholder="Username" class="w-full px-4 py-2 border rounded-md">
+            <input id="password" type="password" placeholder="Password" class="w-full px-4 py-2 border rounded-md">
+            <button onclick="signUp()" class="w-full bg-blue-500 text-white px-4 py-2 rounded-md">Sign Up</button>
+            <p class="text-center text-red-500 hidden" id="signup-error">User already exists!</p>
+            <p class="text-center">Already have an account? <span class="text-blue-500 cursor-pointer" onclick="showLogin()">Log In</span></p>
+        </div>
+        <div id="login-form" class="space-y-4 hidden">
+            <input id="login-username" type="text" placeholder="Username" class="w-full px-4 py-2 border rounded-md">
+            <input id="login-password" type="password" placeholder="Password" class="w-full px-4 py-2 border rounded-md">
+            <button onclick="login()" class="w-full bg-blue-500 text-white px-4 py-2 rounded-md">Log In</button>
+            <p class="text-center text-red-500 hidden" id="login-error">Invalid credentials!</p>
+            <p class="text-center">Don't have an account? <span class="text-blue-500 cursor-pointer" onclick="showSignUp()">Sign Up</span></p>
+        </div>
+    </div>
+</div>
+
+<div id="app-section" class="hidden min-h-screen p-6 space-y-6">
+    <h2 class="text-2xl font-bold mb-4">Welcome, <span id="user-name-display"></span></h2>
+    <button onclick="showPreferences()" class="bg-yellow-500 text-white px-4 py-2 rounded-md">Preferences</button>
+    <button onclick="showChat()" class="bg-purple-500 text-white px-4 py-2 rounded-md ml-2">Chat</button>
+    <div id="post-area" class="mb-4">
+        <input id="post-content" type="file" accept="image/*,video/*" class="w-full px-4 py-2 border rounded-md">
+        <button onclick="createPost()" class="w-full bg-green-500 text-white px-4 py-2 mt-2 rounded-md">Share Post</button>
+    </div>
+    <div id="chat-section" class="hidden p-6 space-y-6">
+        <h3 class="text-xl font-bold mb-4">Chat</h3>
+        <div class="space-y-4">
+            <input id="contact-username" type="text" placeholder="Contact Username" class="w-full px-4 py-2 border rounded-md">
+            <div class="bg-gray-100 p-4 rounded-md overflow-y-auto max-h-48" id="chat-box">
+                <!-- Chat messages will be displayed here -->
+            </div>
+            <input id="chat-message" type="text" placeholder="Type a message" class="w-full px-4 py-2 border rounded-md">
+            <button onclick="sendMessage()" class="w-full bg-blue-500 text-white px-4 py-2 rounded-md">Send</button>
+            <button onclick="hideChat()" class="w-full bg-red-500 text-white px-4 py-2 rounded-md mt-2">Close Chat</button>
+        </div>
+    </div>
+    <h3 class="text-xl font-bold mb-4">Feed</h3>
+    <div id="feed" class="space-y-4"></div>
+</div>
+
+<div id="preferences-section" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white p-6 rounded-lg">
+        <h2 class="text-xl font-bold mb-4">Preferences</h2>
+        <button onclick="hidePreferences()" class="bg-red-500 text-white px-4 py-2 rounded-md mb-4">Close</button>
+        <h3 class="font-semibold">Settings</h3>
+        <div class="space-y-4 mb-4">
+            <div class="space-y-2">
+                <label for="email" class="block font-medium">Email Notifications</label>
+                <input type="checkbox" id="email" class="form-checkbox">
+            </div>
+            <div class="space-y-2">
+                <label for="privacy" class="block font-medium">Profile Privacy</label>
+                <select id="privacy" class="w-full px-4 py-2 border rounded-md">
+                    <option value="public">Public</option>
+                    <option value="private">Private</option>
+                </select>
+            </div>
+        </div>
+        <h3 class="font-semibold">Chat</h3>
+        <div class="space-y-4">
+            <input id="contact-username" type="text" placeholder="Contact Username" class="w-full px-4 py-2 border rounded-md">
+            <div class="bg-gray-100 p-4 rounded-md overflow-y-auto max-h-48" id="chat-box">
+                <!-- Chat messages will be displayed here -->
+            </div>
+            <input id="chat-message" type="text" placeholder="Type a message" class="w-full px-4 py-2 border rounded-md">
+            <button onclick="sendMessage()" class="w-full bg-blue-500 text-white px-4 py-2 rounded-md">Send</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const contactUsername = document.getElementById('contact-username');
+const chatBox = document.getElementById('chat-box');
+const chatMessage = document.getElementById('chat-message');
+
+function showPreferences() {
+    document.getElementById('chat-section').classList.add('hidden');
+    document.getElementById('app-section').classList.remove('hidden');
+    preferencesSection.classList.remove('hidden');
+    // Load chats from local storage
+    showChats();
+}
+
+function sendMessage() {
+    const contact = contactUsername.value;
+    const message = chatMessage.value;
+
+    if (!contact || !message) {
+        alert('Please enter both contact username and message');
+        return;
+    }
+
+    const user = users.find(user => user.username === contact);
+
+    if (!user) {
+        alert('Contact does not exist!');
+        return;
+    }
+
+    if (!currentUser.chats) currentUser.chats = {};
+    if (!currentUser.chats[contact]) currentUser.chats[contact] = [];
+    if (!user.chats) user.chats = {};
+    if (!user.chats[currentUser.username]) user.chats[currentUser.username] = [];
+
+    currentUser.chats[contact].push({ sender: currentUser.username, message });
+    user.chats[currentUser.username].push({ sender: currentUser.username, message });
+
+    localStorage.setItem('users', JSON.stringify(users));
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    showChats();
+    chatMessage.value = '';
+}
+
+function showChats() {
+    chatBox.innerHTML = '';
+    const contact = contactUsername.value;
+
+    if (currentUser.chats && currentUser.chats[contact]) {
+        currentUser.chats[contact].forEach(chat => {
+            const chatDiv = document.createElement('div');
+            chatDiv.classList.add('p-2', 'rounded-md', chat.sender === currentUser.username ? 'bg-blue-200' : 'bg-green-200');
+            chatDiv.textContent = `${chat.sender}: ${chat.message}`;
+            chatBox.appendChild(chatDiv);
+        });
+    }
+}
+
+function hidePreferences() {
+    preferencesSection.classList.add('hidden');
+}
+const chatSection = document.getElementById('chat-section');
+const appSection = document.getElementById('app-section');
+const authContainer = document.getElementById('auth-container');
+const signUpForm = document.getElementById('sign-up-form');
+const loginForm = document.getElementById('login-form');
+const userNameDisplay = document.getElementById('user-name-display');
+const postContent = document.getElementById('post-content');
+const feed = document.getElementById('feed');
+
+let users = JSON.parse(localStorage.getItem('users')) || [];
+let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+
+function showSignUp() {
+    signUpForm.classList.remove('hidden');
+    loginForm.classList.add('hidden');
+}
+
+function showLogin() {
+    signUpForm.classList.add('hidden');
+    loginForm.classList.remove('hidden');
+}
+
+function signUp() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    if(users.find(user => user.username === username)) {
+        document.getElementById('signup-error').classList.remove('hidden');
+        return;
+    }
+
+    users.push({ username, password, posts: [], likes: [] });
+    localStorage.setItem('users', JSON.stringify(users));
+    alert("Sign up successful!");
+    showLogin();
+}
+
+function login() {
+    const username = document.getElementById('login-username').value;
+    const password = document.getElementById('login-password').value;
+
+    const user = users.find(user => user.username === username && user.password === password);
+
+    if(!user) {
+        document.getElementById('login-error').classList.remove('hidden');
+        return;
+    }
+
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    currentUser = user;
+    loadApp();
+}
+
+function showChat() {
+    chatSection.classList.remove('hidden');
+    appSection.classList.add('hidden');
+    showChats();
+}
+
+function hideChat() {
+    chatSection.classList.add('hidden');
+    appSection.classList.remove('hidden');
+}
+}
+
+function loadApp() {
+    if(currentUser) {
+        userNameDisplay.textContent = currentUser.username;
+        showPosts();
+        authSection.classList.add('hidden');
+        appSection.classList.remove('hidden');
+    } else {
+        authSection.classList.remove('hidden');
+        appSection.classList.add('hidden');
+    }
+}
+
+function createPost() {
+    const file = postContent.files[0];
+
+    if(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            currentUser.posts.push({ content: e.target.result, likes: [] });
+            localStorage.setItem('users', JSON.stringify(users));
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            showPosts();
+        }
+        reader.readAsDataURL(file);
+    }
+}
+
+function showPosts() {
+    feed.innerHTML = '';
+    users.forEach(user => {
+        user.posts.forEach(post => {
+            const postDiv = document.createElement('div');
+            const postImg = document.createElement('img');
+            const postDetails = document.createElement('div');
+            const likeBtn = document.createElement('button');
+            const likeCount = document.createElement('span');
+
+            postDiv.className = 'bg-white p-4 rounded-md shadow-md';
+            postImg.src = post.content;
+            postImg.className = 'w-full h-auto rounded-md mb-2';
+            postDetails.className = 'text-center';
+
+            likeCount.textContent = `Likes: ${post.likes.length}`;
+            likeCount.className = 'block text-sm text-gray-600 mb-2';
+
+            likeBtn.textContent = 'Like';
+            likeBtn.className = 'w-full bg-blue-500 text-white py-1 rounded-md';
+            likeBtn.onclick = function() {
+                if (!post.likes.includes(currentUser.username)) {
+                    post.likes.push(currentUser.username);
+                } else {
+                    post.likes = post.likes.filter(user => user !== currentUser.username);
+                }
+                localStorage.setItem('users', JSON.stringify(users));
+                showPosts();
+                localStorage.setItem('users', JSON.stringify(users));
+                showPosts();
+            }
+
+            postDiv.appendChild(postImg);
+            postDetails.appendChild(likeBtn);
+            postDetails.appendChild(likeCount);
+            postDiv.appendChild(postDetails);
+            feed.appendChild(postDiv);
+        });
+    });
+}
+
+document.addEventListener('DOMContentLoaded', loadApp);
+
+</script>
+
+</body>
+</html>
